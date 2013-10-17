@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="css/index.css" />
+        <title>Acceleration Example</title>
+        
+        <script type="text/javascript" charset="utf-8" src="cordova-2.5.0.js"></script>
+        <script type="text/javascript" charset="utf-8">
+            
+                // The watch id references the current `watchAcceleration`
+            var watchID = null;
+            var currPosX = 1;
+            var currPosY = 1;
+            var myEventTime = 0;
+            var myDelay = 1000;
+            var myXTrigger = 1.5;
+            var myYTrigger = 6;
+            var myYtune = 3;
+            var myEventTriggered = false;
+            var highX = 0;
+            var highY = 0;
+            var highZ = 0;
+            var currX = 0;
+            var currY = 0;
+            var currZ = 0;
+            var setsT = 0;
+            
+                // Wait for Cordova to load
+                //
+            document.addEventListener("deviceready", onDeviceReady, false);
+            
+                // Cordova is ready
+                //
+            function onDeviceReady() {
+                startWatch();
+            }
+            
+                // Start watching the acceleration
+                //
+            function startWatch() {
+                
+                    // Update acceleration every .1 seconds
+                var options = { frequency: 100 };
+                resetValues();
+                
+                watchID = navigator.accelerometer.watchAcceleration(onSuccess, onError, options);
+            }
+            
+                // Stop watching the acceleration
+                //
+            function stopWatch() {
+                if (watchID) {
+                    navigator.accelerometer.clearWatch(watchID);
+                    watchID = null;
+                }
+            }
+            
+                // Reset watching the acceleration
+                //
+            function resetValues() {
+                currPosX = 1;
+                currPosY = 1;
+                myEventTime = 0;
+                myEventTriggered = false;
+                var move_el = document.getElementById('mymove');
+                move_el.innerHTML = 'Waiting for move...';
+                highX = 0;
+                highY = 0;
+                highZ = 0;
+                currX = 0;
+                currY = 0;
+                currZ = 0;
+            }
+        
+            
+                // Handle Left Move
+            function myHandleLeft (){
+                var move_el = document.getElementById('mymove');
+                if (currPosX <= 1) {
+                    move_el.innerHTML = 'Already Left';
+                    myEventTime = currT - (myDelay*.5);
+                }
+                else {
+                    currPosX -=1;
+                    move_el.innerHTML = 'Left';
+                    myEventTime = currT;
+                }
+            }
+            
+                // Handle Right Move
+            function myHandleRight (){
+                var move_el = document.getElementById('mymove');
+                if (currPosX >= 3) {
+                    move_el.innerHTML = 'Already Right';
+                    myEventTime = currT - (myDelay*.5);
+                }
+                else {
+                    currPosX +=1;
+                    move_el.innerHTML = 'Right';
+                    myEventTime = currT;
+                }
+            }
+            
+                // Handle Up Move
+            function myHandleUp (){
+                var move_el = document.getElementById('mymove');
+                if (currPosY <= 1) {
+                    move_el.innerHTML = 'Already Top';
+                    myEventTime = currT - (myDelay*.5);
+                }
+                else {
+                    currPosY -=1;
+                    move_el.innerHTML = 'Up';
+                    myEventTime = currT;
+                }
+            }
+            
+                // Handle Down Move
+            function myHandleDown (){
+                var move_el = document.getElementById('mymove');
+                if (currPosY >= 3) {
+                    move_el.innerHTML = 'Already Bottom';
+                    myEventTime = currT - (myDelay*.5);
+                }
+                else {
+                    currPosY +=1;
+                    move_el.innerHTML = 'Down';
+                    myEventTime = currT;
+                }
+            }
+            
+                // Event Handler
+            
+            function myEventChecker () {
+                if (currX > myXTrigger) { //check for Left trigger
+                    myHandleLeft();
+                    myEventTriggered = true;
+                }
+                else if (currX < (-1*myXTrigger)) { //check for Right trigger
+                    myHandleRight();
+                    myEventTriggered = true;
+                }
+                else if (currY > (myYTrigger+myYtune)) { //check for Up trigger
+                    myHandleUp();
+                    myEventTriggered = true;
+                }
+                else if (currY < (myYTrigger-myYtune)) { //check Down trigger
+                    myHandleDown();
+                    myEventTriggered = true;
+                }
+            }
+            
+            function GetSomeData(acceleration) {
+
+                currX = acceleration.x;
+                currY = acceleration.y;
+                currZ = acceleration.z - 9.9;
+                currT = acceleration.timestamp;
+                                
+                if ( ( Math.abs(currX) > Math.abs(highX) ) || ( Math.abs(currX) < .25 ) ) { highX = currX; }
+                if ( ( Math.abs(currY) > Math.abs(highY) ) || ( Math.abs(currY) < .25 ) ) { highY = currY; }
+                if ( ( Math.abs(currZ) > Math.abs(highZ) ) || ( Math.abs(currZ) < .25 ) ) { highZ = currZ; }
+                
+                var date = new Date(currT);
+                var hours = date.getHours();
+                var minutes = date.getMinutes();
+                var seconds = date.getSeconds();
+                var formattedTime = hours + ':' + minutes + ':' + seconds;
+                
+                var element = document.getElementById('accelerometer');
+                element.innerHTML = '<br /><br />' +
+                'X: ' + currX.toFixed(2) + '  High: ' + highX.toFixed(2) +'<br /><br />' +
+                'Y: ' + currY.toFixed(2) + '  High: ' + highY.toFixed(2) +'<br /><br />' +
+                'Z: ' + currZ.toFixed(2) + '  High: ' + highZ.toFixed(2) +'<br /><br />' +
+                'T: ' + formattedTime;
+
+            }
+            
+            function TellWhereWeAre(){
+                var pos_el = document.getElementById('mypos');
+                pos_el.innerHTML =  'Horizontal Index = ' + currPosX +'<br />' +
+                                    'Vertical Index = ' + currPosY;
+            }
+            
+            
+                // onSuccess: Get a snapshot of the current acceleration
+
+            function onSuccess(acceleration) {
+                
+                GetSomeData(acceleration);
+                
+                // if no event then check for one
+                if (!myEventTriggered) { 
+                    myEventChecker();
+                } // if my event was triggered check if the delay has passed to listen for another one.
+                else if ((myEventTime + myDelay) < currT) { 
+                    var move_el = document.getElementById('mymove');
+                    move_el.innerHTML = 'Waiting for move...';
+                    myEventTriggered = false;
+                }
+                
+                TellWhereWeAre();
+                
+            }
+            
+                // onError: Failed to get the acceleration
+                //
+            function onError() {
+                alert('onError!');
+            }
+            
+            </script>
+    </head>
+    <body style="text-align:center; font-size: 24px; font-weight: bold;">
+        <div id="accelerometer">Waiting for accelerometer...</div>
+        <div style="margin: 20px 0;" id="mymove">Waiting for move...</div>
+        <div style="margin-bottom: 20px;" id="mypos">Current Position...</div>
+        <button onclick="resetValues();">Reset</button>
+    </body>
+</html>
